@@ -1,0 +1,82 @@
+version: '3.2'
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  pg-data:
+  home-dir:
+
+services:
+  app: &app-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: on-failure
+    volumes:
+      - ./docker/app-entrypoint.sh:/app-entrypoint.sh:ro
+      - .:/app:cached
+      - home-dir:/home/user:cached
+    env_file:
+      - ./docker/docker-compose.env
+    ports:
+      - '8000:8000'
+    command: 'rr serve -v -d -c /app/.rr.yaml'
+    # command: 'php artisan serve --host=0.0.0.0 --port=8000'
+    depends_on:
+      - redis
+      - elastics
+      - db
+    networks:
+      - app-network
+
+  queue:
+    <<: *app-service
+    environment:
+      STARTUP_DELAY: 5
+    command: 'php /app/artisan queue:work --memory=64'
+    ports: []
+
+
+  db:
+    image: postgres:11-alpine
+    ports:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "app_user"
+      POSTGRES_DB: "app_db"
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+    networks:
+      - app-network
+
+  redis:
+    image: redis:${REDIS_VERSION:-5.0.5}-alpine
+    volumes:
+      - redis-data:/data:cached
+    ports:
+      - 6379
+    networks:
+      - app-network
+
+  elastics:
+    image: elasticsearch:7.8.0
+    ports:
+      - 9200
+      - 9300
+    environment:
+      - node.name=es01
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    restart: always
+    networks:
+      - app-network
