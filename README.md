@@ -1,6 +1,6 @@
 По всем вопросам в телеграм
 
-[![Chat](https://img.shields.io/badge/telegram-@dbuyanov-blue?logo=telegram)](tg://@dbuyanov)
+[![Chat](https://img.shields.io/badge/telegram-@dbuyanov-blue?logo=telegram)](https://t.me/dbuyanov)
 
 Installation
 ---
