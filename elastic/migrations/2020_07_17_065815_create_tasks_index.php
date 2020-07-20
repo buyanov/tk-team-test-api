@@ -13,7 +13,7 @@ final class CreateTasksIndex implements MigrationInterface
      */
     public function up(): void
     {
-        Index::create('tasks', static function (Mapping $mapping, Settings $settings) {
+        Index::createIfNotExists('tasks', static function (Mapping $mapping, Settings $settings) {
             $mapping->text('title');
             $mapping->text('description');
         });
