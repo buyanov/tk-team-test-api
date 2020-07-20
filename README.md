@@ -1,3 +1,7 @@
+По всем вопросам в телеграм
+
+[![Chat](https://img.shields.io/badge/telegram-@dbuyanov-blue?logo=telegram)](tg://@dbuyanov)
+
 Installation
 ---
 
