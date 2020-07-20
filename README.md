@@ -1,4 +1,5 @@
-#Installation
+Installation
+---
 
 Зависимости: make, git, docker, docker-compose
 
@@ -46,6 +47,7 @@ make down
 docker-compose exec app php artisan scout:import "App\Task"
 ```
 
-#Docs
+Docs
+---
 
 https://documenter.getpostman.com/view/2790977/T1DjkKyg?version=latest
