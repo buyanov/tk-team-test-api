@@ -23,11 +23,13 @@ services:
       - ./docker/docker-compose.env
     ports:
       - '8000:8000'
+      - 2112
     command: 'rr serve -v -d -c /app/.rr.yaml'
     # command: 'php artisan serve --host=0.0.0.0 --port=8000'
     depends_on:
       - redis
       - elastics
+      - pgbouncer
       - db
     networks:
       - app-network
@@ -39,7 +41,6 @@ services:
     command: 'php /app/artisan queue:work --memory=64'
     ports: []
 
-
   db:
     image: postgres:11-alpine
     ports:
@@ -49,8 +50,23 @@ services:
       POSTGRES_USER: "app_user"
       POSTGRES_DB: "app_db"
     volumes:
+      - .data/pg-data:/var/lib/postgresql/data:rw
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
+    networks:
+      - app-network
+
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.pgbouncer
+    restart: on-failure
+    volumes:
+      - ./docker/pgbouncer:/etc/pgbouncer
+    ports:
+      - 6432
+    depends_on:
+      - db
     networks:
       - app-network
 
@@ -80,3 +96,42 @@ services:
     restart: always
     networks:
       - app-network
+
+  grafana:
+    image: grafana/grafana:7.1.0
+    container_name: grafana
+    volumes:
+      - .data/grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    labels:
+      org.label-schema.group: "monitoring"
+
+  prometheus:
+    image: prom/prometheus:v2.17.1
+    container_name: prometheus
+    volumes:
+      - ./docker/prometheus:/etc/prometheus
+      - .data/prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+    labels:
+      org.label-schema.group: "monitoring"

@@ -1,10 +1,46 @@
 env:
-  APP_REFRESH: true
+  #APP_REFRESH: true
 
 http:
   address: 0.0.0.0:8000
   workers:
     command: 'php ./vendor/bin/rr-worker'
+
+metrics:
+  address: 0.0.0.0:2112
+
+health:
+  address: 0.0.0.0:2114
+
+# Additional HTTP headers and CORS control.
+headers:
+  # Middleware to handle CORS requests, https://www.w3.org/TR/cors/
+  cors:
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+    allowedOrigin: "*"
+
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+    allowedHeaders: "*"
+
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+    allowedMethods: "GET,POST,PUT,DELETE"
+
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
+    allowCredentials: true
+
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
+    exposedHeaders: "Cache-Control,Content-Language,Content-Type,Expires,Last-Modified,Pragma"
+
+    # Max allowed age in seconds
+    maxAge: 600
+
+  # Automatically add headers to every request passed to PHP.
+  request:
+    "Example-Request-Header": "Value"
+
+  # Automatically add headers to every response.
+  response:
+    "X-Powered-By": "RoadRunner"
 
 static:
   dir: 'public'

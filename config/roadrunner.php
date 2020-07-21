@@ -128,6 +128,7 @@ return [
         Laravel\Sanctum\SanctumServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
 
+        CloudCreativity\LaravelJsonApi\ServiceProvider::class,
         Illuminate\Pagination\PaginationServiceProvider::class,
     ],
 ];

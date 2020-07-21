@@ -7,7 +7,7 @@ dc_bin := $(shell command -v docker-compose 2> /dev/null)
 SHELL = /bin/sh
 RUN_APP_ARGS = --rm app
 
-.PHONY : help build latest install lowest test test-cover clean
+.PHONY : help build install up down shell test migrate cs init seed index import logs
 .DEFAULT_GOAL : help
 
 # This will output the help for each task. thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -38,6 +38,18 @@ cs: ## Execute app codestyle checker
 
 clean: ## Execute app cache clear
 	$(dc_bin) exec app php artisan optimize:clear
+
+migrate: ## Execute app database migrate
+	$(dc_bin) exec app php artisan migrate
+
+seed: ## Run database seeders
+	$(dc_bin) exec app php artisan db:seed
+
+index: ## Create elastic index
+	$(dc_bin) exec app php artisan elastic:migrate
+
+import: ## Import models into Elasticsearch
+	$(dc_bin) exec app php artisan scout:import "App\Task"
 
 init: ## Execute app database migrate, seed, create admin, elastic create index
 	$(dc_bin) exec app php artisan migrate

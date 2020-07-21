@@ -1,0 +1,31 @@
+FROM alpine:latest as builder
+
+RUN apk --no-cache add ca-certificates g++ git make automake autoconf linux-pam linux-pam-dev libevent libevent-dev pkgconfig openssl openssl-dev c-ares c-ares-dev libtool m4
+
+RUN set -x \
+    && mkdir -p /src/pgbouncer \
+    && cd /src/pgbouncer \
+    && git clone https://github.com/pgbouncer/pgbouncer.git . \
+    && git submodule init \
+    && git submodule update \
+    && ./autogen.sh \
+    && ./configure --with-pam --with-cares \
+    && make; exit 0 \
+    && chmod +x pgbouncer
+
+FROM alpine:latest
+
+RUN apk --no-cache add linux-pam libevent openssl c-ares
+
+RUN addgroup -S pgbouncer && adduser -S pgbouncer -G pgbouncer
+
+USER pgbouncer
+
+COPY --from=builder /src/pgbouncer/pgbouncer /usr/bin/pgbouncer
+COPY --from=builder /src/pgbouncer/etc /etc/pgbouncer
+
+VOLUME ["/etc/pgbouncer"]
+
+EXPOSE 6432
+
+CMD ["pgbouncer", "-v", "-u", "pgbouncer", "/etc/pgbouncer/pgbouncer-minimal.ini"]

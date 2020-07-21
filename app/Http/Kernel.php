@@ -33,7 +33,6 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'api' => [
-            'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             ForceJsonOutput::class
         ],
